@@ -245,8 +245,6 @@ configurationAssistant() {
 
 	if (irisLevel < optimalLevel - 1001) {
 		local levels := optimalLevel - 1001 - irisLevel
-		playNotificationSound()
-		msgbox,,% script,% "Your Iris is " . levels . " levels below the recommended ""optimal level - 1001"" rule."
 	}
 }
 
@@ -394,27 +392,23 @@ speedRun() {
 	}
 
 	showSplash("Starting speed run...")
-
-	if (irisLevel < 2 * lMax + 10) ; Iris high enough to start with a ranger?
-	{
-		switchToCombatTab()
-		scrollDown(initDownClicks[1])
-		toggleMode() ; toggle to progression mode
-		lvlUp(firstStintTime, 0, 3, ++stint, stints) ; nope, let's bridge with Samurai
-		scrollToBottom()
-	} else {
-		scrollToBottom()
-		toggleMode() ; toggle to progression mode
-		if (firstStintTime > 0) {
-			lvlUp(firstStintTime, 1, firstStintButton, ++stint, stints)
-			scrollWayDown(3)
-		}
-	}
-	if (midStintTime > 0) {
-		lvlUp(midStintTime, 1, 2, ++stint, stints)
-		scrollWayDown(2)
-	}
-	lvlUp(lastStintTime, 1, lastStintButton, ++stint, stints)
+	
+	switchToCombatTab()
+	scrollToBottom()
+	toggleMode() ; toggle to progression mode
+	monsterClickerOn()
+	
+	lvlUp(6 * 60, 1, 2, 1) ; 6 mins atlas
+	scrollWayDown(2)
+	lvlup(7 * 60, 1, 2, 1) ; 7 min terra
+	scrollWayDown(2)
+	lvlup(8 * 60, 1, 2, 1) ; 8 min phtalo
+	scrollWayDown(2)
+	lvlup(11 * 60, 1, 2, 1) ; 11 min orntcha
+	scrollWayDown(2)
+	lvlup(20 * 60, 1, 2, 0) ; 13 min lilin
+	
+	monsterClickerOff()
 
 	showSplash("Speed run completed.")
 }
@@ -495,12 +489,12 @@ monsterClickerOff() {
 	}
 }
 
-lvlUp(seconds, buyUpgrades, button, stint, stints) {
+lvlUp(seconds, buyUpgrades, button, pickClickables) {
 	global
 
 	exitThread := false
 	local y := yLvl + oLvl * (button - 1)
-	local title := "Speed Run Progress (" . stint . "/" . stints . ")"
+	local title := "Speed Run Progress"
 
 	startMouseMonitoring()
 	startProgress(title, 0, seconds // barUpdateDelay)
@@ -509,6 +503,7 @@ lvlUp(seconds, buyUpgrades, button, stint, stints) {
 		ctrlClick(xLvl, y)
 		buyAvailableUpgrades()
 	}
+	
 	maxClick(xLvl, y)
 
 	local t := 0
@@ -521,9 +516,19 @@ lvlUp(seconds, buyUpgrades, button, stint, stints) {
 			showSplashAlways("Speed run aborted!")
 			exit
 		}
+		
 		if (mod(t, lvlUpDelay) = 0) {
 			ctrlClick(xLvl, y)
 		}
+		
+		if (mod(t, 20) = 0) {
+			buyAvailableUpgrades()
+			
+			if (pickClickables) {
+				getClickable()
+			}
+		}
+		
 		t += 1
 		updateProgress(t // barUpdateDelay, seconds - t)
 		sleep 1000

@@ -145,10 +145,6 @@ IfNotExist, ch_bot_lib_settings.ahk
 ; No smart image recognition, so we click'em all!
 getClickable() {
 	global
-	; Break idle on purpose to get the same amount of gold every run
-	loop 3 {
-		clickPos(xMonster, yMonster)
-	}
     clickPos(524, 487)
     clickPos(747, 431)
     clickPos(760, 380)

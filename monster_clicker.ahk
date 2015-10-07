@@ -28,7 +28,7 @@ minLibVersion=1.3
 
 script := scriptName . " v" . scriptVersion
 
-short := 21 ; ms
+short := 10 ; ms
 long := 2000 ; throttled delay
 
 clickDelay := short
