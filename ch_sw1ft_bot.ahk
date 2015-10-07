@@ -7,6 +7,8 @@
 #NoEnv
 #InstallKeybdHook
 
+
+
 #Include %A_ScriptDir%
 #Include ch_bot_lib.ahk
 
