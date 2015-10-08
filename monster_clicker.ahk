@@ -28,7 +28,7 @@ minLibVersion=1.3
 
 script := scriptName . " v" . scriptVersion
 
-short := 10 ; ms
+short := 2 ; ms
 long := 2000 ; throttled delay
 
 clickDelay := short
@@ -63,23 +63,14 @@ clientCheck()
 
 	showSplash("Starting...")
 
-	drStartTime := A_TickCount
 	if (clickDuration > 0) {
 		setTimer, stopClicking, % -clickDuration * 60 * 1000 ; run only once
 	}
-	setTimer, checkMouse, 1000
-
+	
 	while(keepOnClicking) {
 		clickPos(xMonster, yMonster)
-		monsterClicks++
 	    sleep % clickDelay
 	}
-
-	setTimer, checkMouse, off
-
-	elapsedTime := (A_TickCount - drStartTime) / 1000
-	clicksPerSecond := round(monsterClicks / elapsedTime, 2)
-	showSplash("Average CPS: " . clicksPerSecond, 5)
 return
 
 ; Remote pause

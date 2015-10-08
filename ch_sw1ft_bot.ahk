@@ -7,8 +7,6 @@
 #NoEnv
 #InstallKeybdHook
 
-
-
 #Include %A_ScriptDir%
 #Include ch_bot_lib.ahk
 
@@ -48,7 +46,7 @@ if (useConfigurationAssistant) {
 clientCheck()
 
 if (deepRunClicks) {
-	Run, monster_clicker.ahk,, UseErrorLevel
+	Run, C:\Users\clickerheroes\Desktop\clicker-heroes-sw1ft-bot-master\monster_clicker.ahk,, UseErrorLevel
 	if (ErrorLevel != 0) {
 		playWarningSound()
     	msgbox,,% script,% "Failed to auto-start monster_clicker.ahk (system error code = " . A_LastError . ")!"
@@ -307,10 +305,9 @@ loopSpeedRun() {
 		if (activateSkillsAtStart) {
 			activateSkills(speedRunStartCombo[2])
 		}
+		
 		speedRun()
-		if (hybridMode) {
-			deepRun()
-		}
+
 		if (saveBeforeAscending) {
 			save()
 		}
@@ -320,97 +317,23 @@ loopSpeedRun() {
 	}
 }
 
-; All heroes/rangers are expected to "insta-kill" everything at max speed (i.e. around
-; 7 minutes per 250 levels). Only the last 2-3 minutes should slow down slightly.
 speedRun() {
 	global
-
-	local stint := 0
-	local stints := 0
-	local tMax := 7 * 60 ; seconds
-	local lMax := 250 ; zones
-
-	local lvlAdjustment := round(firstStintAdjustment * lMax / tMax)
-	local zoneLvl := gildedRanger * lMax + lvlAdjustment ; approx zone lvl where we can buy our gilded ranger @ lvl 150
-	local lvls := zoneLvl - irisLevel ; lvl's to get there
-
-	local firstStintButton := 1
-	local firstStintTime := 0
-	local midStintTime := 0
-
-	if (lvls > lMax + 2*60*lMax/tMax) ; add a mid stint if needed
-	{
-		midStintTime := tMax
-		lvls -= lMax
-		stints += 1
-	} else if (lvls > lMax) {
-		firstStintButton := 2
-	}
-	
-	if (lvls > 0)
-	{
-		firstStintTime := ceil(lvls * tMax / lMax)
-		stints += 1
-	}
-
-	local srDuration := speedRunTime * 60
-	local totalClickDelay := ceil(srDuration / lvlUpDelay * zzz / 1000 + nextHeroDelay * stints)
-	local lastStintTime := srDuration - firstStintTime - midStintTime - totalClickDelay
-	stints += 1
-
-	local lastStintButton := gildedRanger = 9 ? 3 : 2 ; special case for Astraea
-
-	if (debug)
-	{
-		local nl := "`r`n"
-		local s := "    " ; Reddit friendly formatting
-		local output := ""
-		output .= s . "irisLevel = " . irisLevel . nl
-		output .= s . "optimalLevel = " . optimalLevel . nl
-		output .= s . "speedRunTime = " . speedRunTime . nl
-		output .= s . "gildedRanger = " . rangers[gildedRanger] . nl
-		output .= s . "-----------------------------" . nl
-		output .= s . "initDownClicks = "
-		for i, e in initDownClicks {
-			output .= e " "
-		}
-		output .= nl
-		output .= s . "yLvlInit = " . yLvlInit . nl
-		output .= s . "firstStintAdjustment = " . firstStintAdjustment . "s" . nl
-		output .= s . "-----------------------------" . nl
-		output .= s . "lvlAdjustment = " . lvlAdjustment . nl
-		output .= s . "zoneLvl = " . zoneLvl . nl
-		output .= s . "lvls = " . lvls . nl
-		output .= s . "srDuration = " . formatSeconds(srDuration) . nl
-		output .= s . "firstStintButton = " . firstStintButton . nl
-		output .= s . "firstStintTime = " . formatSeconds(firstStintTime) . nl
-		output .= s . "midStintTime = " . formatSeconds(midStintTime) . nl
-		output .= s . "lastStintTime = " . formatSeconds(lastStintTime) . nl
-		output .= s . "totalClickDelay = " . formatSeconds(totalClickDelay) . nl
-
-		clipboard := % output
-		msgbox % output
-		return
-	}
 
 	showSplash("Starting speed run...")
 	
 	switchToCombatTab()
 	scrollToBottom()
 	toggleMode() ; toggle to progression mode
-	monsterClickerOn()
 	
-	lvlUp(6 * 60, 1, 2, 1) ; 6 mins atlas
-	scrollWayDown(2)
-	lvlup(7 * 60, 1, 2, 1) ; 7 min terra
-	scrollWayDown(2)
-	lvlup(8 * 60, 1, 2, 1) ; 8 min phtalo
-	scrollWayDown(2)
-	lvlup(11 * 60, 1, 2, 1) ; 11 min orntcha
-	scrollWayDown(2)
-	lvlup(20 * 60, 1, 2, 0) ; 13 min lilin
-	
-	monsterClickerOff()
+	for i, minutes in heroConfig {
+		getCoin := index <> heroConfig.MaxIndex() ; do not pick coin for last round
+		monsterClickerOn()
+		lvlUp(minutes * 60, 2, getCoin) ; for now, always click on second button
+		monsterClickerOff()
+		sleep 1000
+		scrollToBottom()
+	}
 
 	showSplash("Speed run completed.")
 }
@@ -491,7 +414,7 @@ monsterClickerOff() {
 	}
 }
 
-lvlUp(seconds, buyUpgrades, button, pickClickables) {
+lvlUp(seconds, button, pickClickables) {
 	global
 
 	exitThread := false
@@ -500,11 +423,6 @@ lvlUp(seconds, buyUpgrades, button, pickClickables) {
 
 	startMouseMonitoring()
 	startProgress(title, 0, seconds // barUpdateDelay)
-
-	if (buyUpgrades) {
-		ctrlClick(xLvl, y)
-		buyAvailableUpgrades()
-	}
 	
 	maxClick(xLvl, y)
 
