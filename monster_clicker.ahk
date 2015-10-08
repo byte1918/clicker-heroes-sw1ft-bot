@@ -61,7 +61,7 @@ clientCheck()
 	keepOnClicking := true
 	monsterClicks := 0
 
-	showSplash("Starting...")
+	showSplash("Starting clicker...")
 
 	if (clickDuration > 0) {
 		setTimer, stopClicking, % -clickDuration * 60 * 1000 ; run only once

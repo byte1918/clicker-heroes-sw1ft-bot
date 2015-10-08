@@ -15,6 +15,7 @@ SetControlDelay, -1
 scriptName=CH Sw1ft Bot
 scriptVersion=2.41
 minLibVersion=1.32
+heroConfig := []
 
 script := scriptName . " v" . scriptVersion
 
@@ -76,6 +77,7 @@ return
 ; Abort speed/deep runs and auto ascensions with Alt+Pause
 !Pause::
 	showSplashAlways("Aborting...")
+	monsterClickerOff()
 	exitThread := true
 	exitDRThread := true
 return
@@ -326,13 +328,21 @@ speedRun() {
 	scrollToBottom()
 	toggleMode() ; toggle to progression mode
 	
-	for i, minutes in heroConfig {
-		getCoin := i <> heroConfig.MaxIndex() ; do not pick coin for last round
+	loadHeroConfig()
+	
+	local i := 1
+
+	while i <= heroConfig.MaxIndex()  {
+	    getCoin := i <> heroConfig.MaxIndex() ; do not pick coin for last round
+	    
 		monsterClickerOn()
-		lvlUp(minutes * 60, 2, getCoin) ; for now, always click on second button
+		lvlUp(heroConfig[i] * 60, 2, getCoin) ; for now always click on second button
 		monsterClickerOff()
 		sleep 1000
 		scrollToBottom()
+		
+		i++
+		loadHeroConfig()
 	}
 
 	showSplash("Speed run completed.")
@@ -421,7 +431,6 @@ lvlUp(seconds, button, pickClickables) {
 	local y := yLvl + oLvl * (button - 1)
 	local title := "Speed Run Progress"
 
-	startMouseMonitoring()
 	startProgress(title, 0, seconds // barUpdateDelay)
 	
 	maxClick(xLvl, y)
@@ -454,7 +463,6 @@ lvlUp(seconds, button, pickClickables) {
 		sleep 1000
 	}
 	stopProgress()
-	stopMouseMonitoring()
 }
 
 save() {
@@ -636,6 +644,12 @@ handleAutorun() {
 		showSplash("Autorun speedruns...", 1)
 		loopSpeedrun()
 	}
+}
+
+loadHeroConfig() {
+	global
+	FileRead, data, C:\Users\clickerheroes\Desktop\clicker-heroes-sw1ft-bot-master\heroconfig.txt
+	heroConfig := StrSplit(data, ",")
 }
 
 ; -----------------------------------------------------------------------------------------

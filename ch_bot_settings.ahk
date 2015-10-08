@@ -2,14 +2,11 @@
 ; -- Active Build
 ; -----------------------------------------------------------------------------------------
 
-; The idea is that after you ascend you have enough money to buy a ranger
-; The script scrolls at the bottom of the heroes list and for %value% minutes 
-; it will click on second hire button (hard coded for now). 
-;	In my sample, the last available ranger is Atlast and it will level him for 
-; 6 minutes, after that I have enough money for Phthalo and continue with him 
-; for the next 9 minutes and so on.
+; The idea is that after you ascend you have enough money to level a ranger
+; The script scrolls at the bottom of the heroes list and for <key> minutes 
+; it will click on  button number <value> (in my case it's always two)
 
-heroConfig := [6, 9, 5,11, 28] ;
+; moved to heroconfig.txt
 
 ; -----------------------------------------------------------------------------------------
 ; -- Mandatory Configuration
