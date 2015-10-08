@@ -327,7 +327,7 @@ speedRun() {
 	toggleMode() ; toggle to progression mode
 	
 	for i, minutes in heroConfig {
-		getCoin := index <> heroConfig.MaxIndex() ; do not pick coin for last round
+		getCoin := i <> heroConfig.MaxIndex() ; do not pick coin for last round
 		monsterClickerOn()
 		lvlUp(minutes * 60, 2, getCoin) ; for now, always click on second button
 		monsterClickerOff()
