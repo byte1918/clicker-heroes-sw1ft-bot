@@ -35,14 +35,6 @@ clickDelay := short
 
 ; -----------------------------------------------------------------------------------------
 
-; Load system default settings
-#Include system\monster_clicker_default_settings.ahk
-
-IfNotExist, monster_clicker_settings.ahk
-{
-	FileCopy, system\monster_clicker_default_settings.ahk, monster_clicker_settings.ahk
-}
-
 #Include *i monster_clicker_settings.ahk
 
 if (libVersion < minLibVersion) {

@@ -27,7 +27,7 @@ displayRelicsDuration := 10 ; warning timer (in seconds) before salvaging the ju
 ; If you run the Steam client with autoAscend, you can screenshot every relic you salvage!
 screenShotRelics := false
 
-saveBeforeAscending := false ; autosave the game
+saveBeforeAscending := true ; autosave the game
 
 ; If the script don't press the save button automatically when running
 ; with "saveBeforeAscending" set to true, change "Button1" to "Button2".
@@ -35,7 +35,7 @@ saveButtonClassNN := "Button2" ; Button1 or Button2
 
 ; If the auto-save fails to change the file name properly and you get
 ; a "already exists" message, change save mode to 2.
-saveMode := 1 ; 1 or 2
+saveMode := 2 ; 1 or 2
 
 debug := false ; when set to "true", you can press Alt+F3 to show some debug info (also copied into your clipboard)
 
