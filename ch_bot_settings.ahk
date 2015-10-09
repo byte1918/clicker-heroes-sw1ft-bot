@@ -1,41 +1,18 @@
 ; -----------------------------------------------------------------------------------------
-; -- Active Build
-; -----------------------------------------------------------------------------------------
-
-; The idea is that after you ascend you have enough money to level a ranger
-; The script scrolls at the bottom of the heroes list and for <key> minutes 
-; it will click on  button number <value> (in my case it's always two)
-
-; moved to heroconfig.txt
-
-; -----------------------------------------------------------------------------------------
 ; -- Mandatory Configuration
 ; -----------------------------------------------------------------------------------------
 
-irisLevel := 529 ; try to keep your Iris within 1001 levels of your optimal zone
-
-; Clicker Heroes Ancients Optimizer @ http://s3-us-west-2.amazonaws.com/clickerheroes/ancientssoul.html
-
-; Use the optimizer to set the optimal level and time:
-optimalLevel := 2100
-speedRunTime := 47 ; minutes (usually between 28 and 30 minutes)
-
-; In the Heroes tab you can verify that you are using the optimal ranger.
-gildedRanger := 6 ; the number of your main guilded ranger
-; 1:Dread Knight, 2:Atlas, 3:Terra, 4:Phthalo, 5:Banana, 6:Lilin, 7:Cadmia, 8:Alabaster, 9:Astraea
+irisLevel := 600
 
 ; -----------------------------------------------------------------------------------------
 ; -- Optional Settings
 ; -----------------------------------------------------------------------------------------
 
+clickableAndUpgradeDelay := 20 ; every 20 seconds the bot will buy all available upgrades and pick clickables.
+
 ; -- Speed run ----------------------------------------------------------------------------
 
-; If the script starts on the 2nd ranger too early (before lvl 100) or too late (after lvl 200), adjust this setting.
-firstStintAdjustment := 0 ; Add or remove time (in seconds) to or from the first hero.
-
 activateSkillsAtStart := true ; usually needed in the late game to get going after ascending
-
-hybridMode := false ; chain a deep run when the speed run finish
 
 ascDownClicks := 26 ; # of down clicks needed to get the ascension button center:ish (after a full speed run)
 
@@ -65,15 +42,6 @@ debug := false ; when set to "true", you can press Alt+F3 to show some debug inf
 ; -- Deep run -----------------------------------------------------------------------------
 
 deepRunTime := 50 ; minutes
-
-clickableHuntDelay := 15 ; hunt for a clickable every 15s
-stopHuntThreshold := 30 ; stop hunt when this many minutes remain of a deep run
-
-; Number of gilds to move over at a time
-reGildCount := 100 ; don't set this higher than 100 if you plan on moving gilds during a deep run
-reGildRanger := gildedRanger + 1 
-
-deepRunClicks := true ; click the monster during a deep run?
 
 ; -- Init run -----------------------------------------------------------------------------
 
@@ -153,4 +121,3 @@ comboEGolden := [2.5*60, "8-5-2-3-4-7-6-9", "2", "2", "2-3-4", "2", "2"] ; energ
 comboGoldenLuck := [2.5*60, "6-2-3-5-8-9", "2-3-4-5-7", "2", "2", "2-3-4", "2", "2"]
 
 speedRunStartCombo := comboStart
-deepRunCombo := comboGoldenLuck

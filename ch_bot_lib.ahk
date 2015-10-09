@@ -128,14 +128,6 @@ ySave := 112
 
 ; -----------------------------------------------------------------------------------------
 
-; Load system default settings
-#Include system\ch_bot_lib_default_settings.ahk
-
-IfNotExist, ch_bot_lib_settings.ahk
-{
-	FileCopy, system\ch_bot_lib_default_settings.ahk, ch_bot_lib_settings.ahk
-}
-
 #Include *i ch_bot_lib_settings.ahk
 
 ; -----------------------------------------------------------------------------------------

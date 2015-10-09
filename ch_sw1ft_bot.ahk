@@ -9,6 +9,7 @@
 
 #Include %A_ScriptDir%
 #Include ch_bot_lib.ahk
+SetWorkingDir %A_ScriptDir%
 
 SetControlDelay, -1
 
@@ -24,14 +25,6 @@ scheduleStop := false
 
 ; -----------------------------------------------------------------------------------------
 
-; Load system default settings
-#Include system\ch_bot_default_settings.ahk
-
-IfNotExist, ch_bot_settings.ahk
-{
-	FileCopy, system\ch_bot_default_settings.ahk, ch_bot_settings.ahk
-}
-
 ; Load user settings
 #Include *i ch_bot_settings.ahk
 
@@ -43,15 +36,13 @@ if (libVersion != minLibVersion) {
 if (useConfigurationAssistant) {
 	configurationAssistant()
 }
-
+	
 clientCheck()
 
-if (deepRunClicks) {
-	Run, C:\Users\clickerheroes\Desktop\clicker-heroes-sw1ft-bot-master\monster_clicker.ahk,, UseErrorLevel
-	if (ErrorLevel != 0) {
-		playWarningSound()
-    	msgbox,,% script,% "Failed to auto-start monster_clicker.ahk (system error code = " . A_LastError . ")!"
-	}
+Run, monster_clicker.ahk,, UseErrorLevel
+if (ErrorLevel != 0) {
+	playWarningSound()
+    msgbox,,% script,% "Failed to auto-start monster_clicker.ahk (system error code = " . A_LastError . ")!"
 }
 
 handleAutorun()
@@ -128,35 +119,7 @@ return
 ; Stop looping when current speed run finishes with Shift+Pause
 +Pause::
 	toggleFlag("scheduleStop", scheduleStop)
-return
-
-; Deep run
-; Use (after a speed run)
-^F2::
-	deepRun()
-return
-
-; Set previous ranger as re-gild target
-^F6::
-	reGildRanger := reGildRanger > rangers.MinIndex() ? reGildRanger-1 : reGildRanger
-	showSplashAlways("Re-gild ranger set to " . rangers[reGildRanger])
-return
-
-; Set next ranger as re-gild target
-^F7::
-	reGildRanger := reGildRanger < rangers.MaxIndex() ? reGildRanger+1 : reGildRanger
-	showSplashAlways("Re-gild ranger set to " . rangers[reGildRanger])
-return
-
-; Move "reGildCount" gilds to the target ranger (will pause the monster clicker if running)
-^F8::
-	critical
-	playNotificationSound()
-	msgbox, 4,% script,% "Move " . reGildCount . " gilds to " . rangers[reGildRanger] . "?"
-	ifmsgbox no
-		return
-	regild(reGildRanger, reGildCount) ; will pause the monster clicker if running
-return
+return	
 
 ; Autosave the game
 ^F11::
@@ -297,8 +260,7 @@ upgrade(times, cc1:=1, cc2:=1, cc3:=1, cc4:=1, skip:=false) {
 loopSpeedRun() {
 	global
 
-	mode := hybridMode ? "hybrid" : "speed"
-	showSplashAlways("Starting " . mode . " runs...")
+	showSplashAlways("Starting speed runs...")
 	loop
 	{
 		getClickable()
@@ -348,80 +310,19 @@ speedRun() {
 	showSplash("Speed run completed.")
 }
 
-deepRun() {
-	global
-
-	exitDRThread := false
-
-	local drDuration := deepRunTime * 60
-	local button := gildedRanger = 9 ? 3 : 2 ; special case for Astraea
-	local y := yLvl + oLvl * (button - 1)
-
-	showSplash("Starting deep run...")
-
-	startMouseMonitoring()
-	startProgress("Deep Run Progress", 0, drDuration // barUpdateDelay)
-	monsterClickerOn()
-
-	local comboDelay := deepRunCombo[1]
-	local comboIndex := 2
-	local stopHuntIndex := drDuration - stopHuntThreshold * 60
-	local t := 0
-
-	loop % drDuration
-	{
-		if (exitDRThread) {
-			monsterClickerOff()
-			stopProgress()
-			stopMouseMonitoring()
-			showSplashAlways("Deep run aborted!")
-			exit
-		}
-		if (deepRunClicks) {
-			clickPos(xMonster, yMonster)
-		}
-		if (mod(t, comboDelay) = 0) {
-			activateSkills(deepRunCombo[comboIndex])
-			comboIndex := comboIndex < deepRunCombo.MaxIndex() ? comboIndex+1 : 2
-		}
-		if (mod(t, lvlUpDelay) = 0) {
-			ctrlClick(xLvl, y, 1, 0)
-		}
-		if (mod(t, clickableHuntDelay) = 0 and t < stopHuntIndex) {
-			getClickable()
-		}
-		t += 1
-		updateProgress(t // barUpdateDelay, drDuration - t)
-		sleep 1000
-	}
-
-	monsterClickerOff()
-	stopProgress()
-	stopMouseMonitoring()
-
-	showSplash("Deep run ended.")
-	sleep 1000
-}
-
 monsterClickerOn(isActive:=true) {
 	global
-	if (deepRunClicks) {
-		send {shift down}{f1 down}{f1 up}{shift up}
-	}
+	send {shift down}{f1 down}{f1 up}{shift up}
 }
 
 monsterClickerPause() {
 	global
-	if (deepRunClicks) {
-		send {shift down}{f2 down}{f2 up}{shift up}
-	}
+	send {shift down}{f2 down}{f2 up}{shift up}
 }
 
 monsterClickerOff() {
 	global
-	if (deepRunClicks) {
-		send {shift down}{f3 down}{f3 up}{shift up}
-	}
+	send {shift down}{f3 down}{f3 up}{shift up}
 }
 
 lvlUp(seconds, button, pickClickables) {
@@ -450,7 +351,7 @@ lvlUp(seconds, button, pickClickables) {
 			ctrlClick(xLvl, y)
 		}
 		
-		if (mod(t, 20) = 0) {
+		if (mod(t, clickableAndUpgradeDelay) = 0) {
 			buyAvailableUpgrades()
 			
 			if (pickClickables) {
@@ -573,25 +474,6 @@ buyAvailableUpgrades() {
 	sleep % zzz * 3
 }
 
-; Move "gildCount" gilds to given ranger
-regild(ranger, gildCount) {
-	global
-	monsterClickerPause()
-	switchToCombatTab()
-	scrollToBottom()
-
-	clickPos(xGilded, yGilded)
-	sleep % zzz * 2
-
-	ControlSend,, {shift down}, % winName
-	clickPos(rangerPositions[ranger].x, rangerPositions[ranger].y, gildCount)
-	sleep % 1000 * gildCount/100*5
-	ControlSend,, {shift up}, % winName
-
-	clickPos(xGildedClose, yGildedClose)
-	sleep % zzz * 2
-}
-
 ; Toggle between farm and progression modes
 toggleMode() {
 	global
@@ -648,7 +530,7 @@ handleAutorun() {
 
 loadHeroConfig() {
 	global
-	FileRead, data, C:\Users\clickerheroes\Desktop\clicker-heroes-sw1ft-bot-master\heroconfig.txt
+	FileRead, data, heroconfig.txt
 	heroConfig := StrSplit(data, ",")
 }
 
