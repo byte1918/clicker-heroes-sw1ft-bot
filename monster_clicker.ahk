@@ -73,6 +73,10 @@ clientCheck()
 	}
 return
 
+; Pause/Unpause script
+~Pause::Pause
+return
+
 ; Remote pause
 +F2::
 	critical

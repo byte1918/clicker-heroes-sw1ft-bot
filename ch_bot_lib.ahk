@@ -343,6 +343,7 @@ startProgress(title, min:=0, max:=100) {
 	global
 	if (showProgressBar) {
 		gui, new
+		gui,+AlwaysOnTop
 		gui, margin, 0, 0
 		gui, font, s18
 		gui, add, progress,% "w" wProgressBar " h28 range" min "-" max " -smooth vProgressBar"
