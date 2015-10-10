@@ -344,18 +344,18 @@ startProgress(title, min:=0, max:=100) {
 	if (showProgressBar) {
 		gui, new
 		gui,+AlwaysOnTop
-		gui, margin, 0, 0
+		gui, margin, 10, 10
 		gui, font, s18
 		gui, add, progress,% "w" wProgressBar " h28 range" min "-" max " -smooth vProgressBar"
-		gui, add, text, w92 vProgressBarTime x+2
+		gui, add, text, w220 vProgressBarTime x+2
 		gui, show,% "na x" xProgressBar " y" yProgressBar,% script " - " title
 	}
 }
 
-updateProgress(position, remainingTime) {
+updateProgress(position, total, elapsed) {
 	if (showProgressBar) {
 		guicontrol,, ProgressBar,% position
-		guicontrol,, ProgressBarTime,% formatSeconds(remainingTime)
+		guicontrol,, ProgressBarTime,% formatSeconds(elapsed) . " - " . formatSeconds(total) 
 	}
 }
 

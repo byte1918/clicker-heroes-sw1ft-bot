@@ -9,6 +9,7 @@ irisLevel := 600
 ; -----------------------------------------------------------------------------------------
 
 clickableAndUpgradeDelay := 20 ; every 20 seconds the bot will buy all available upgrades and pick clickables.
+roundModifier := 60 ; seconds
 
 ; -- Speed run ----------------------------------------------------------------------------
 

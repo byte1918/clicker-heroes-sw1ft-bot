@@ -13,7 +13,7 @@ SetWorkingDir %A_ScriptDir%
 
 SetControlDelay, -1
 
-scriptName=CH Sw1ft Bot
+scriptName=CH Troggobot (based on Sw1ft bot)
 scriptVersion=2.41
 minLibVersion=1.32
 heroConfig := []
@@ -22,6 +22,9 @@ script := scriptName . " v" . scriptVersion
 
 scheduleReload := false
 scheduleStop := false
+
+endRound := false
+currentRoundTime := 0
 
 ; -----------------------------------------------------------------------------------------
 
@@ -71,6 +74,23 @@ return
 	monsterClickerOff()
 	exitThread := true
 	exitDRThread := true
+return
+
++^k:: 
+	endRound := true
+return
+
++^up::
+	currentRoundTime := currentRoundTime + roundModifier
+return
+
++^down::
+	newRoundTime := currentRoundTime - roundModifier
+	if (newRoundTime > 0) {
+		currentRoundTime := newRoundTime
+	} else {
+		showSplashAlways("Cannot decrease round time below 0")
+	}
 return
 
 ; Quick tests:
@@ -293,12 +313,33 @@ speedRun() {
 	loadHeroConfig()
 	
 	local i := 1
-
+	
 	while i <= heroConfig.MaxIndex()  {
+		showSplash("Starting round: " i)
+		
+		endRound := false ; reset flag
+		
 	    getCoin := i <> heroConfig.MaxIndex() ; do not pick coin for last round
 	    
+		button := 2 	; by default click on second hire button; if value from heroConfig is negative
+							; click on third button 
+							
+		if (heroConfig[i] < 0) {
+			heroConfig[i] := heroConfig[i] * -1
+			button := 3
+		}
+		
 		monsterClickerOn()
-		lvlUp(heroConfig[i] * 60, 2, getCoin) ; for now always click on second button
+		roundDuration := lvlUp(heroConfig[i], button, getCoin)
+		
+		if (roundDuration <> heroConfig[i]) {  	; if roundDuration is different then the one from config => user has ended the round 
+			loadHeroConfig()									; the heroConfig[] might be old and to avoid overwriting any changes that might have 
+																		; happened during the round, we need to load the heroConfig again
+			
+			heroConfig[i] := roundDuration			; update round with new duration
+			saveHeroConfig()								
+		}
+		
 		monsterClickerOff()
 		sleep 1000
 		scrollToBottom()
@@ -330,21 +371,27 @@ lvlUp(seconds, button, pickClickables) {
 
 	exitThread := false
 	local y := yLvl + oLvl * (button - 1)
-	local title := "Speed Run Progress"
+	local title := "Round Progress"
 
 	startProgress(title, 0, seconds // barUpdateDelay)
 	
 	maxClick(xLvl, y)
-
+	
+	currentRoundTime := seconds
 	local t := 0
 
-	loop % seconds
+	while (t < currentRoundTime)
 	{
 		if (exitThread) {
 			stopProgress()
-			stopMouseMonitoring()
-			showSplashAlways("Speed run aborted!")
+			showSplashAlways("Round aborted!")
 			exit
+		}
+		
+		if (endRound) {
+			showSplashAlways("Round ended after " t  " seconds instead of " currentRoundTime ". (dif=" currentRoundTime - t ")")
+			stopProgress()
+			return t
 		}
 		
 		if (mod(t, lvlUpDelay) = 0) {
@@ -360,10 +407,12 @@ lvlUp(seconds, button, pickClickables) {
 		}
 		
 		t += 1
-		updateProgress(t // barUpdateDelay, seconds - t)
+		updateProgress(t // barUpdateDelay, currentRoundTime, t)
 		sleep 1000
 	}
+	
 	stopProgress()
+	return currentRoundTime
 }
 
 save() {
@@ -532,6 +581,19 @@ loadHeroConfig() {
 	global
 	FileRead, data, heroconfig.txt
 	heroConfig := StrSplit(data, ",")
+}
+
+saveHeroConfig() {
+	global
+	data := ""
+	for i, value in heroConfig {
+		data := data value ","
+	}
+
+	StringTrimRight, data, data, 1
+	
+	FileDelete, heroconfig.txt
+	FileAppend, %data%, heroconfig.txt
 }
 
 ; -----------------------------------------------------------------------------------------
