@@ -352,8 +352,9 @@ startProgress(title, min:=0, max:=100) {
 	}
 }
 
-updateProgress(position, total, elapsed) {
+updateProgress(position, max,  total, elapsed) {
 	if (showProgressBar) {
+		guicontrol, +Range0-%max%, ProgressBar
 		guicontrol,, ProgressBar,% position
 		guicontrol,, ProgressBarTime,% formatSeconds(elapsed) . " - " . formatSeconds(total) 
 	}

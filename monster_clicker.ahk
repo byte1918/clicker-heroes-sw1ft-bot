@@ -66,16 +66,11 @@ clientCheck()
 return
 
 ; Pause/Unpause script
+; Remote pause
++F2::
 ~Pause::Pause
 return
 
-; Remote pause
-+F2::
-	critical
-	if (keepOnClicking) {
-		msgbox,,% script,Click safety pause engaged. Continue?
-	}
-return
 
 ; Stop clicker with Shift+F3
 +F3::

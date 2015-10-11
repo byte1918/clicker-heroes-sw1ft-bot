@@ -144,7 +144,7 @@ return
 ; Autosave the game
 ^F11::
 	critical
-	monsterClickerPause()
+	monsterClickerTogglePause()
 	save()
 return
 
@@ -236,12 +236,6 @@ configurationAssistant() {
 ; Check if Iris is within a certain threshold that can cause a toggling behaviour between different settings
 irisThreshold(lvl) {
 	global
-	local upperThreshold := lvl + 19
-	local lowerThreshold := lvl - 20
-	if (irisLevel >= lowerThreshold and irisLevel < upperThreshold) {
-		playWarningSound()
-		msgbox,,% script,% "Threshold proximity warning! You should level up your Iris to " . upperThreshold . " or higher."
-	}
 	return irisLevel > lvl
 }
 
@@ -281,6 +275,9 @@ loopSpeedRun() {
 	global
 
 	showSplashAlways("Starting speed runs...")
+	monsterClickerOn()
+	monsterClickerTogglePause() ; pause
+	
 	loop
 	{
 		getClickable()
@@ -315,7 +312,7 @@ speedRun() {
 	local i := 1
 	
 	while i <= heroConfig.MaxIndex()  {
-		showSplash("Starting round: " i)
+		showSplash("Starting round: " i " out of " heroConfig.MaxIndex())
 		
 		endRound := false ; reset flag
 		
@@ -329,7 +326,7 @@ speedRun() {
 			button := 3
 		}
 		
-		monsterClickerOn()
+		monsterClickerTogglePause() ; resume
 		roundDuration := lvlUp(heroConfig[i], button, getCoin)
 		
 		if (roundDuration <> heroConfig[i]) {  	; if roundDuration is different then the one from config => user has ended the round 
@@ -340,7 +337,7 @@ speedRun() {
 			saveHeroConfig()								
 		}
 		
-		monsterClickerOff()
+		monsterClickerTogglePause() ; pause
 		sleep 1000
 		scrollToBottom()
 		
@@ -356,7 +353,7 @@ monsterClickerOn(isActive:=true) {
 	send {shift down}{f1 down}{f1 up}{shift up}
 }
 
-monsterClickerPause() {
+monsterClickerTogglePause() {
 	global
 	send {shift down}{f2 down}{f2 up}{shift up}
 }
@@ -395,19 +392,23 @@ lvlUp(seconds, button, pickClickables) {
 		}
 		
 		if (mod(t, lvlUpDelay) = 0) {
+			monsterClickerTogglePause()
 			ctrlClick(xLvl, y)
+			monsterClickerTogglePause()
 		}
 		
 		if (mod(t, clickableAndUpgradeDelay) = 0) {
+		    monsterClickerTogglePause()
 			buyAvailableUpgrades()
 			
 			if (pickClickables) {
 				getClickable()
 			}
+			monsterClickerTogglePause()
 		}
 		
 		t += 1
-		updateProgress(t // barUpdateDelay, currentRoundTime, t)
+		updateProgress(t // barUpdateDelay, currentRoundTime // barUpdateDelay, currentRoundTime, t)
 		sleep 1000
 	}
 	
