@@ -65,7 +65,9 @@ return
 return
 
 ; Pause/Unpause script
-Pause::Pause
+Pause::
+Pause
+scrollToBottom()
 return
 
 ; Abort speed/deep runs and auto ascensions with Alt+Pause
@@ -77,7 +79,7 @@ return
 return
 
 +^k:: 
-	endRound := true
+	updateBuyColor()
 return
 
 +^up::
@@ -236,7 +238,7 @@ configurationAssistant() {
 ; Check if Iris is within a certain threshold that can cause a toggling behaviour between different settings
 irisThreshold(lvl) {
 	global
-	return irisLevel > lvl
+	return irisLevel > lvl 
 }
 
 ; Level up and upgrade all heroes
@@ -274,7 +276,8 @@ upgrade(times, cc1:=1, cc2:=1, cc3:=1, cc4:=1, skip:=false) {
 loopSpeedRun() {
 	global
 
-	showSplashAlways("Starting speed runs...")
+	showDebug()
+	DebugAppend("Starting speed runs")
 	monsterClickerOn()
 	monsterClickerTogglePause() ; pause
 	
@@ -283,9 +286,7 @@ loopSpeedRun() {
 		getClickable()
 		sleep % coinPickUpDelay * 1000
 		initRun()
-		if (activateSkillsAtStart) {
-			activateSkills(speedRunStartCombo[2])
-		}
+		activateSkills(speedRunStartCombo[2])
 		
 		speedRun()
 
@@ -301,51 +302,78 @@ loopSpeedRun() {
 speedRun() {
 	global
 
-	showSplash("Starting speed run...")
+	DebugAppend("Starting new speed run`r`n")
 	
 	switchToCombatTab()
 	scrollToBottom()
+	
 	toggleMode() ; toggle to progression mode
 	
-	loadHeroConfig()
+	local i := duration * 60 ; seconds to run after we reach gilded ranger
+	local t := 0 ; total time
+	local heroCount := 0 ; increase when switching to next ranger
+	local y := yLvl + oLvl * (2 - 1) ; 2 is second button
+	local d := 0 ; duration on one hero
 	
-	local i := 1
+	DebugAppend("duration = " duration ", heroCounter = " heroCounter)
 	
-	while i <= heroConfig.MaxIndex()  {
-		showSplash("Starting round: " i " out of " heroConfig.MaxIndex())
-		
-		endRound := false ; reset flag
-		
-	    getCoin := i <> heroConfig.MaxIndex() ; do not pick coin for last round
-	    
-		button := 2 	; by default click on second hire button; if value from heroConfig is negative
-							; click on third button 
-							
-		if (heroConfig[i] < 0) {
-			heroConfig[i] := heroConfig[i] * -1
-			button := 3
-		}
-		
-		monsterClickerTogglePause() ; resume
-		roundDuration := lvlUp(heroConfig[i], button, getCoin)
-		
-		if (roundDuration <> heroConfig[i]) {  	; if roundDuration is different then the one from config => user has ended the round 
-			loadHeroConfig()									; the heroConfig[] might be old and to avoid overwriting any changes that might have 
-																		; happened during the round, we need to load the heroConfig again
-			
-			heroConfig[i] := roundDuration			; update round with new duration
-			saveHeroConfig()								
-		}
-		
-		monsterClickerTogglePause() ; pause
-		sleep 1000
-		scrollToBottom()
-		
-		i++
-		loadHeroConfig()
-	}
+	monsterClickerTogglePause() ; resume
+	while ( i > 0 || heroCount <> heroCounter){
 
-	showSplash("Speed run completed.")
+		if (herCount <> heroCounter && d >= 900) { ; if we are not at last hero and spent more than 15 minutes we force move to next one
+			heroCount := heroCount + 1
+			d := 0
+			monsterClickerTogglePause()
+			scrollToTop()
+			scrollToBottom()
+			monsterClickerTogglePause()
+		}
+
+		if (mod(t, lvlUpDelay) = 0) {
+			monsterClickerTogglePause()
+			
+			maxClick(xLvl, y)
+			if (heroCount <> heroCounter && isBuyVisible() = 0) {
+				heroCount := heroCount + 1
+				if (heroCount = heroCounter) {
+					DebugAppend("Reached last hero after " d // 60 " minutes")
+				} else {
+					DebugAppend("Moving to next hero: " heroCount " after " d // 60 " minutes")
+				}
+				
+				d := 0
+				scrollToTop() ; in case scroll bar gets bugged
+				scrollToBottom()
+			}
+			
+			monsterClickerTogglePause()
+		}
+		
+		if (mod(t, clickableAndUpgradeDelay) = 0) {
+		    monsterClickerTogglePause()
+			buyAvailableUpgrades()
+			
+			if (i >= 1500) { ; pick only if more than 25 minutes are left
+				getClickable()
+			}
+			
+			monsterClickerTogglePause()
+		}
+		
+		sleep 1000
+		t := t + 1
+		updateProgress(t)
+		if (heroCount = heroCounter) { ; start counting down when we reach last gilded ranger
+			i := i - 1
+			updateRemaining(i)
+		} else {
+			d := d + 1 ; time spent on current hero
+		}
+	}
+	
+	monsterClickerTogglePause() ; Pause
+
+	DebugAppend("Finished run in " t // 60 " minutes")
 }
 
 monsterClickerOn(isActive:=true) {
@@ -361,59 +389,6 @@ monsterClickerTogglePause() {
 monsterClickerOff() {
 	global
 	send {shift down}{f3 down}{f3 up}{shift up}
-}
-
-lvlUp(seconds, button, pickClickables) {
-	global
-
-	exitThread := false
-	local y := yLvl + oLvl * (button - 1)
-	local title := "Round Progress"
-
-	startProgress(title, 0, seconds // barUpdateDelay)
-	
-	maxClick(xLvl, y)
-	
-	currentRoundTime := seconds
-	local t := 0
-
-	while (t < currentRoundTime)
-	{
-		if (exitThread) {
-			stopProgress()
-			showSplashAlways("Round aborted!")
-			exit
-		}
-		
-		if (endRound) {
-			showSplashAlways("Round ended after " t  " seconds instead of " currentRoundTime ". (dif=" currentRoundTime - t ")")
-			stopProgress()
-			return t
-		}
-		
-		if (mod(t, lvlUpDelay) = 0) {
-			monsterClickerTogglePause()
-			ctrlClick(xLvl, y)
-			monsterClickerTogglePause()
-		}
-		
-		if (mod(t, clickableAndUpgradeDelay) = 0) {
-		    monsterClickerTogglePause()
-			buyAvailableUpgrades()
-			
-			if (pickClickables) {
-				getClickable()
-			}
-			monsterClickerTogglePause()
-		}
-		
-		t += 1
-		updateProgress(t // barUpdateDelay, currentRoundTime // barUpdateDelay, currentRoundTime, t)
-		sleep 1000
-	}
-	
-	stopProgress()
-	return currentRoundTime
 }
 
 save() {
@@ -521,7 +496,7 @@ salvageJunkPile() {
 buyAvailableUpgrades() {
 	global
 	clickPos(xBuy, yBuy)
-	sleep % zzz * 3
+	sleep % zzz
 }
 
 ; Toggle between farm and progression modes

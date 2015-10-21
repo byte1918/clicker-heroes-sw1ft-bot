@@ -9,6 +9,8 @@ winName=Clicker Heroes
 
 global ProgressBar, ProgressBarTime ; progress bar controls
 
+buyColor := 0x0
+
 exitThread := false
 exitDRThread := false
 
@@ -244,6 +246,7 @@ scrollToBottom() {
 	global
 	scrollDown(top2BottomClicks)
 	sleep 1000
+	updateBuyColor()
 }
 
 scrollUp(clickCount:=1) {
@@ -289,6 +292,29 @@ clickPos(xCoord, yCoord, clickCount:=1) {
 	local xAdj := getAdjustedX(xCoord)
 	local yAdj := getAdjustedY(yCoord)
  	ControlClick, x%xAdj% y%yAdj%, ahk_id %chWinId%,,, %clickCount%, NA
+}
+
+getBuyColor() {
+	global
+	local xAdj := getAdjustedX(xBuy)
+	local yAdj := getAdjustedY(yBuy)
+	PixelGetColor, color, %xAdj%, %yAdj%	
+	return color
+}
+
+updateBuyColor() {
+	global
+	buyColor := getBuyColor()	
+	DebugAppendColor(buyColor)
+}
+
+isBuyVisible() {
+	global
+	if (getBuyColor() = buyColor) {
+		return 1
+	} else {
+		return 0
+	}
 }
 
 getAdjustedX(x) {
@@ -339,31 +365,47 @@ showSplash(text, seconds:=2, sound:=1, showAlways:=0) {
 	}
 }
 
-startProgress(title, min:=0, max:=100) {
+showDebug() {
 	global
-	if (showProgressBar) {
-		gui, new
-		gui,+AlwaysOnTop
-		gui, margin, 10, 10
-		gui, font, s18
-		gui, add, progress,% "w" wProgressBar " h28 range" min "-" max " -smooth vProgressBar"
-		gui, add, text, w220 vProgressBarTime x+2
-		gui, show,% "na x" xProgressBar " y" yProgressBar,% script " - " title
+	Gui, +AlwaysOnTop
+	Gui, Add, Text, x2 y5 w90 h30 vTotalLabel, Total:
+	Gui, Add, Text, x60 y5 w100 h30 vTotalTime ,
+	Gui, Add, Text, x190 y5 w120 h30 vRemainingLabel, Remaining:
+	Gui, Add, Text, x302 y5 w250 h30 vRemainingTime , 
+	Gui, Add, Edit, Readonly x2 y39 w310 h180 vDebug, 
+	Gui, Add, Edit, Readonly x322 y39 w90 h180 vDebugColor, 
+
+	Gui, font, s16
+	GuiControl, font, TotalTime
+	GuiControl, font, TotalLabel
+	GuiControl, font, RemainingTime
+	GuiControl, font, RemainingLabel
+
+	Gui, Show, na x670 y0 w415 h222, Troggobot
+}
+
+DebugAppend(Data, showTime := 1)
+{
+	GuiControlGet, Debug
+	if (showTime = 1) {
+		FormatTime, time,, HH:mm:ss
+		GuiControl,, Debug, %time% - %Data%`r`n%Debug%
+	} else {
+		GuiControl,, Debug, %Data%`r`n%Debug%
 	}
 }
 
-updateProgress(position, max,  total, elapsed) {
-	if (showProgressBar) {
-		guicontrol, +Range0-%max%, ProgressBar
-		guicontrol,, ProgressBar,% position
-		guicontrol,, ProgressBarTime,% formatSeconds(elapsed) . " - " . formatSeconds(total) 
-	}
+DebugAppendColor(color) {
+	GuiControlGet, DebugColor
+	GuiControl,, DebugColor, %color%`r`n%DebugColor%
 }
 
-stopProgress() {
-	if (showProgressBar) {
-		gui, destroy
-	}
+updateProgress(total) {
+	GuiControl,, TotalTime, % formatSeconds(total) 
+}
+
+updateRemaining(remaining) {
+	GuiControl,, RemainingTime, % formatSeconds(remaining)
 }
 
 formatSeconds(s) {
